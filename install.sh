@@ -1,11 +1,11 @@
 #!/bin/bash
 # Terminal Anywhere Interactive Installation Script
-# One-command installation: curl -L https://scantrancher-terminal-anywhere.hf.space/install.sh | bash
+# One-command installation: curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install.sh | bash
 
 set -e
 
 # Configuration
-REPO_URL="https://scantrancher-terminal-anywhere.hf.space"
+REPO_URL="https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main"
 INSTALL_DIR="$HOME/.local/bin"
 
 # Colors for output

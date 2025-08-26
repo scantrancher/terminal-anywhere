@@ -10,17 +10,17 @@ Access and share terminal sessions from anywhere with enterprise-grade security 
 
 ### Install Server
 ```bash
-curl -L https://scantrancher-terminal-anywhere.hf.space/install-server.sh | bash
+curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install-server.sh | bash
 ```
 
 ### Install Client
 ```bash
-curl -L https://scantrancher-terminal-anywhere.hf.space/install-client.sh | bash
+curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install-client.sh | bash
 ```
 
 ### Install Both (Interactive)
 ```bash
-curl -L https://scantrancher-terminal-anywhere.hf.space/install.sh | bash
+curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install.sh | bash
 ```
 
 ---

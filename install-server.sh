@@ -1,11 +1,11 @@
 #!/bin/bash
 # Terminal Anywhere Server Installation Script
-# One-command installation: curl -L https://huggingface.co/spaces/scantrancher/terminal_anywhere/raw/main/install-server.sh | bash
+# One-command installation: curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install-server.sh | bash
 
 set -e
 
 # Configuration
-REPO_URL="https://huggingface.co/spaces/scantrancher/terminal_anywhere/raw/main"
+REPO_URL="https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main"
 BINARY_NAME="terminal_anywhere_server"
 INSTALL_DIR="$HOME/.local/bin"
 VERSION_URL="$REPO_URL/version.json"
@@ -54,7 +54,7 @@ get_download_url() {
     local platform=$1
     local binary_file="${BINARY_NAME}-${platform}"
     # Use resolve/main for Git LFS files instead of raw/main
-    local url="https://huggingface.co/spaces/scantrancher/terminal_anywhere/resolve/main/latest/${binary_file}"
+    local url="https://github.com/scantrancher/terminal-anywhere/raw/main/latest/${binary_file}"
     
     # Check if URL is accessible
     if command -v curl >/dev/null 2>&1; then
@@ -140,7 +140,7 @@ show_usage() {
     echo ""
     print_info "Connect a client:"
     echo "  # Install client first:"
-    echo "  curl -L https://huggingface.co/spaces/scantrancher/terminal_anywhere/raw/main/install-client.sh | bash"
+    echo "  curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install-client.sh | bash"
     echo ""
     echo "  # Then connect:"
     echo "  terminal_anywhere_client ws://server-ip:7860/ws --token TOKEN"
@@ -195,7 +195,7 @@ main() {
 if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "Terminal Anywhere Server Installer"
     echo ""
-    echo "Usage: curl -L https://huggingface.co/spaces/scantrancher/terminal_anywhere/raw/main/install-server.sh | bash"
+    echo "Usage: curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install-server.sh | bash"
     echo ""
     echo "This script will:"
     echo "  1. Detect your platform (Linux/macOS, x64/ARM64)"

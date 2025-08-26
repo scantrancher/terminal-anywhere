@@ -53,23 +53,11 @@ detect_platform() {
 get_download_url() {
     local platform=$1
     local binary_file="${BINARY_NAME}-${platform}"
-    # Use resolve/main for Git LFS files instead of raw/main
     local url="https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/latest/${binary_file}"
     
-    # Check if URL is accessible
-    if command -v curl >/dev/null 2>&1; then
-        if curl -sL --head "$url" | head -n 1 | grep -q -E "(200 OK|302 Found)"; then
-            echo "$url"
-            return 0
-        fi
-    elif command -v wget >/dev/null 2>&1; then
-        if wget -q --spider "$url"; then
-            echo "$url"
-            return 0
-        fi
-    fi
-    
-    return 1
+    # Return the URL directly - let the download function handle validation
+    echo "$url"
+    return 0
 }
 
 # Download and install binary
@@ -85,10 +73,19 @@ install_binary() {
     mkdir -p "$INSTALL_DIR"
     
     # Download binary
+    print_info "Downloading $BINARY_NAME..."
     if command -v curl >/dev/null 2>&1; then
-        curl -L -o "$temp_file" "$download_url"
+        if ! curl -L -o "$temp_file" "$download_url"; then
+            print_error "Download failed. Please check your internet connection and try again."
+            print_info "URL: $download_url"
+            exit 1
+        fi
     elif command -v wget >/dev/null 2>&1; then
-        wget -O "$temp_file" "$download_url"
+        if ! wget -O "$temp_file" "$download_url"; then
+            print_error "Download failed. Please check your internet connection and try again."
+            print_info "URL: $download_url"
+            exit 1
+        fi
     else
         print_error "Neither curl nor wget is available. Please install one of them."
         exit 1
@@ -168,13 +165,8 @@ main() {
     
     # Get download URL
     local download_url
-    if download_url=$(get_download_url "$platform"); then
-        print_info "Binary available at: $download_url"
-    else
-        print_error "Binary not available for platform: $platform"
-        print_info "Please check https://github.com/scantrancher/terminal-anywhere/releases for available releases"
-        exit 1
-    fi
+    download_url=$(get_download_url "$platform")
+    print_info "Downloading binary from: $download_url"
     
     # Check for existing installation
     if [ -f "${INSTALL_DIR}/${BINARY_NAME}" ]; then

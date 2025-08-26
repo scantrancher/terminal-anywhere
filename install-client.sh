@@ -54,11 +54,11 @@ get_download_url() {
     local platform=$1
     local binary_file="${BINARY_NAME}-${platform}"
     # Use resolve/main for Git LFS files instead of raw/main
-    local url="https://github.com/scantrancher/terminal-anywhere/raw/main/latest/${binary_file}"
+    local url="https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/latest/${binary_file}"
     
     # Check if URL is accessible
     if command -v curl >/dev/null 2>&1; then
-        if curl -s --head "$url" | head -n 1 | grep -q "200 OK"; then
+        if curl -sL --head "$url" | head -n 1 | grep -q -E "(200 OK|302 Found)"; then
             echo "$url"
             return 0
         fi
@@ -181,7 +181,7 @@ main() {
         print_info "Binary available at: $download_url"
     else
         print_error "Binary not available for platform: $platform"
-        print_info "Please check https://huggingface.co/spaces/scantrancher/terminal_anywhere for available releases"
+        print_info "Please check https://github.com/scantrancher/terminal-anywhere/releases for available releases"
         exit 1
     fi
     

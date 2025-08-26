@@ -8,19 +8,27 @@ Access and share terminal sessions from anywhere with enterprise-grade security 
 
 ## ⚡ Quick Install
 
-### Install Server
+### Install Server Only
 ```bash
 curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install-server.sh | bash
 ```
 
-### Install Client
+### Install Client Only
 ```bash
 curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install-client.sh | bash
 ```
 
-### Install Both (Interactive)
+### Install Both (Recommended)
 ```bash
-curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install.sh | bash
+curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install.sh | bash -s both
+```
+
+### Interactive Installation
+For a menu-driven installation, download and run the script directly:
+```bash
+wget https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install.sh
+chmod +x install.sh
+./install.sh
 ```
 
 ---

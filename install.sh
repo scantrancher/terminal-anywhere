@@ -8,14 +8,25 @@ set -e
 REPO_URL="https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main"
 INSTALL_DIR="$HOME/.local/bin"
 
-# Colors for output
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-YELLOW='\033[1;33m'
-BLUE='\033[0;34m'
-CYAN='\033[0;36m'
-BOLD='\033[1m'
-NC='\033[0m' # No Color
+# Colors for output (only if terminal supports it)
+if [ -t 1 ] && [ -t 0 ]; then
+    RED='\033[0;31m'
+    GREEN='\033[0;32m'
+    YELLOW='\033[1;33m'
+    BLUE='\033[0;34m'
+    CYAN='\033[0;36m'
+    BOLD='\033[1m'
+    NC='\033[0m' # No Color
+else
+    # No colors for non-interactive sessions
+    RED=''
+    GREEN=''
+    YELLOW=''
+    BLUE=''
+    CYAN=''
+    BOLD=''
+    NC=''
+fi
 
 # Helper functions
 print_info() { echo -e "${BLUE}ℹ${NC} $1"; }
@@ -114,8 +125,20 @@ install_both() {
     echo "  http://server-ip:7860/terminal?token=TOKEN"
 }
 
+# Check if we can run interactively
+check_interactive() {
+    if [ ! -t 0 ] || [ ! -t 1 ]; then
+        print_warning "Non-interactive session detected (likely piped through curl)"
+        print_info "Defaulting to installing both server and client..."
+        echo ""
+        install_both
+        exit 0
+    fi
+}
+
 # Main interactive loop
 main() {
+    check_interactive
     while true; do
         show_menu
         printf "Enter your choice [1-4, q]: "
@@ -157,6 +180,23 @@ main() {
         esac
     done
 }
+
+# Show usage information for piped execution
+if [ ! -t 0 ]; then
+    echo "Terminal Anywhere Installation"
+    echo "============================="
+    echo ""
+    echo "💡 TIP: For interactive installation, download and run directly:"
+    echo "  wget https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install.sh"
+    echo "  chmod +x install.sh"
+    echo "  ./install.sh"
+    echo ""
+    echo "Or use command line arguments:"
+    echo "  curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install.sh | bash -s server"
+    echo "  curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install.sh | bash -s client"
+    echo "  curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install.sh | bash -s both"
+    echo ""
+fi
 
 # Non-interactive mode based on arguments
 if [ $# -gt 0 ]; then

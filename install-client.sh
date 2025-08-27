@@ -50,57 +50,93 @@ detect_platform() {
 }
 
 # Check if binary exists and get download URL
-get_download_url() {
+get_download_urls() {
     local platform=$1
     local binary_file="${BINARY_NAME}-${platform}"
-    local url="https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/latest/${binary_file}"
-    
-    # Return the URL directly - let the download function handle validation
-    echo "$url"
+    # Prefer GitHub Releases assets
+    echo "https://github.com/scantrancher/terminal-anywhere/releases/latest/download/${binary_file}"
+    # Fallback to raw (may be LFS pointer if quota exceeded)
+    echo "https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/latest/${binary_file}"
+}
+
+# Validate that a downloaded file is a real binary, not an LFS pointer
+is_valid_binary() {
+    local path="$1"
+    [ -f "$path" ] && [ -s "$path" ] || return 1
+    if head -n 1 "$path" | grep -qi "git-lfs.github.com/spec/v1"; then
+        return 1
+    fi
+    if command -v xxd >/dev/null 2>&1; then
+        local magic
+        magic=$(xxd -p -l 4 "$path" 2>/dev/null | tr '[:lower:]' '[:upper:]')
+        case "$magic" in
+            7F454C46) return 0 ;;
+            CFFAEDFE) return 0 ;;
+            CEFAEDFE) return 0 ;;
+            FEEDFACF) return 0 ;;
+            FEEDFACE) return 0 ;;
+        esac
+    fi
+    if [ $(wc -c <"$path") -lt 4096 ]; then
+        return 1
+    fi
     return 0
 }
 
 # Download and install binary
 install_binary() {
-    local download_url=$1
-    local platform=$2
-    local temp_file="/tmp/${BINARY_NAME}"
+    local platform=$1
     local final_path="${INSTALL_DIR}/${BINARY_NAME}"
-    
+    local temp_file
+    temp_file=$(mktemp "/tmp/${BINARY_NAME}.XXXXXX")
+
     print_info "Downloading Terminal Anywhere Client..."
-    
-    # Create install directory
     mkdir -p "$INSTALL_DIR"
-    
-    # Download binary
-    print_info "Downloading $BINARY_NAME..."
-    if command -v curl >/dev/null 2>&1; then
-        if ! curl -L -o "$temp_file" "$download_url"; then
-            print_error "Download failed. Please check your internet connection and try again."
-            print_info "URL: $download_url"
+
+    local url
+    local success=0
+    while IFS= read -r url; do
+        [ -n "$url" ] || continue
+        print_info "Attempting download: $url"
+        if command -v curl >/dev/null 2>&1; then
+            if curl -fL -o "$temp_file" "$url"; then
+                if is_valid_binary "$temp_file"; then
+                    success=1
+                    break
+                else
+                    print_warning "Downloaded file is not a valid binary (likely LFS pointer)."
+                fi
+            else
+                print_warning "Download failed from: $url"
+            fi
+        elif command -v wget >/dev/null 2>&1; then
+            if wget -q -O "$temp_file" "$url"; then
+                if is_valid_binary "$temp_file"; then
+                    success=1
+                    break
+                else
+                    print_warning "Downloaded file is not a valid binary (likely LFS pointer)."
+                fi
+            else
+                print_warning "Download failed from: $url"
+            fi
+        else
+            print_error "Neither curl nor wget is available. Please install one of them."
+            rm -f "$temp_file"
             exit 1
         fi
-    elif command -v wget >/dev/null 2>&1; then
-        if ! wget -O "$temp_file" "$download_url"; then
-            print_error "Download failed. Please check your internet connection and try again."
-            print_info "URL: $download_url"
-            exit 1
-        fi
-    else
-        print_error "Neither curl nor wget is available. Please install one of them."
+    done < <(get_download_urls "$platform")
+
+    if [ "$success" -ne 1 ]; then
+        print_error "Unable to download a valid binary for $platform."
+        print_info "Tried URLs:"
+        get_download_urls "$platform"
+        rm -f "$temp_file"
         exit 1
     fi
-    
-    # Verify download
-    if [ ! -f "$temp_file" ] || [ ! -s "$temp_file" ]; then
-        print_error "Download failed or file is empty"
-        exit 1
-    fi
-    
-    # Move to install location and make executable
+
     mv "$temp_file" "$final_path"
     chmod +x "$final_path"
-    
     print_success "Terminal Anywhere Client installed to: $final_path"
 }
 
@@ -172,18 +208,13 @@ main() {
     
     print_info "Detected platform: $platform"
     
-    # Get download URL
-    local download_url
-    download_url=$(get_download_url "$platform")
-    print_info "Downloading binary from: $download_url"
-    
     # Check for existing installation
     if [ -f "${INSTALL_DIR}/${BINARY_NAME}" ]; then
         print_warning "Existing installation found. Updating..."
     fi
     
     # Install binary
-    install_binary "$download_url" "$platform"
+    install_binary "$platform"
     
     # Check PATH
     check_path

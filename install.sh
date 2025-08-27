@@ -129,16 +129,37 @@ install_both() {
 check_interactive() {
     if [ ! -t 0 ] || [ ! -t 1 ]; then
         print_warning "Non-interactive session detected (likely piped through curl)"
-        print_info "Defaulting to installing both server and client..."
-        echo ""
-        install_both
+        # Honor CLI arg if provided: server|client|both
+        case "$1" in
+            server)
+                print_info "Installing server only (arg: server)"
+                echo ""
+                install_server
+                ;;
+            client)
+                print_info "Installing client only (arg: client)"
+                echo ""
+                install_client
+                ;;
+            both|"")
+                print_info "Installing both server and client (default)"
+                echo ""
+                install_both
+                ;;
+            *)
+                print_warning "Unknown argument: $1. Expected: server | client | both"
+                print_info "Proceeding with full installation (both)."
+                echo ""
+                install_both
+                ;;
+        esac
         exit 0
     fi
 }
 
 # Main interactive loop
 main() {
-    check_interactive
+    check_interactive "$1"
     while true; do
         show_menu
         printf "Enter your choice [1-4, q]: "

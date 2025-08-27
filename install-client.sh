@@ -9,6 +9,7 @@ REPO_URL="https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main"
 BINARY_NAME="terminal_anywhere_client"
 INSTALL_DIR="$HOME/.local/bin"
 VERSION_URL="$REPO_URL/version.json"
+RELEASE_TAG="${TA_RELEASE_TAG:-}"
 
 # Colors for output
 RED='\033[0;31m'
@@ -54,7 +55,11 @@ get_download_urls() {
     local platform=$1
     local binary_file="${BINARY_NAME}-${platform}"
     # Prefer GitHub Releases assets
-    echo "https://github.com/scantrancher/terminal-anywhere/releases/latest/download/${binary_file}"
+    if [ -n "$RELEASE_TAG" ]; then
+        echo "https://github.com/scantrancher/terminal-anywhere/releases/download/${RELEASE_TAG}/${binary_file}"
+    else
+        echo "https://github.com/scantrancher/terminal-anywhere/releases/latest/download/${binary_file}"
+    fi
     # Fallback to raw (may be LFS pointer if quota exceeded)
     echo "https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/latest/${binary_file}"
 }
@@ -194,6 +199,15 @@ main() {
     print_info "Terminal Anywhere Client Installer"
     echo "=================================="
     
+    # Optional --tag argument to pin a specific release
+    if [ "$1" = "--tag" ] && [ -n "$2" ]; then
+        RELEASE_TAG="$2"
+        shift 2
+        print_info "Using release tag: $RELEASE_TAG"
+    elif [ -n "$RELEASE_TAG" ]; then
+        print_info "Using release tag from TA_RELEASE_TAG: $RELEASE_TAG"
+    fi
+    
     # Detect platform
     local platform=$(detect_platform)
     if [ "$platform" = "unsupported" ]; then
@@ -240,6 +254,11 @@ if [ "$1" = "--help" ] || [ "$1" = "-h" ]; then
     echo "  - Linux ARM64 (Raspberry Pi, ARM servers)"
     echo "  - macOS x64 (Intel Mac)"
     echo "  - macOS ARM64 (Apple Silicon Mac)"
+    echo ""
+    echo "Advanced:"
+    echo "  Use a specific release tag via env or flag:"
+    echo "    TA_RELEASE_TAG=v1.24.4 curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install-client.sh | bash"
+    echo "    curl -L https://raw.githubusercontent.com/scantrancher/terminal-anywhere/main/install-client.sh | bash -s -- --tag v1.24.4"
     exit 0
 fi
 
